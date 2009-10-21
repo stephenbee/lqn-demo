@@ -1,0 +1,4 @@
+repoze.bfg
+repoze.zodbconn
+repoze.tm
+ZODB3
