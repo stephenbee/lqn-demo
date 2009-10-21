@@ -1,0 +1,17 @@
+<configure xmlns="http://namespaces.repoze.org/bfg">
+
+  <!-- this must be included for the view declarations to work -->
+  <include package="repoze.bfg.includes" />
+ 
+  <view
+    for=".models.lqnServer"
+    view=".views.index"
+    />
+
+<!--    <scan package="."/> -->
+
+
+ 
+
+
+</configure>

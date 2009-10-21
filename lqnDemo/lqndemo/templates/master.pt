@@ -1,0 +1,7 @@
+<html metal:define-macro='master'>
+<body>
+Header
+<span metal:define-slot='content' />
+Footer
+</body>
+</html>

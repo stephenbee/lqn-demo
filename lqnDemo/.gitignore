@@ -1,0 +1,9 @@
+*.#*
+.*.swp
+*.pyc
+*.pt.py
+*.cache
+.coverage
+*.egg-info/*
+*.egg
+Data.fs*

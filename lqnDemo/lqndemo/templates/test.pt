@@ -1,0 +1,9 @@
+<html metal:use-macro='master.macros["master"]'>
+<body>
+
+<span metal:fill-slot='content'>
+this is the content
+</span>
+
+</body>
+</html>
