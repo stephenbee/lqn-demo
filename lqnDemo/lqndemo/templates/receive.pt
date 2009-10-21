@@ -1,0 +1,18 @@
+<html metal:use-macro='master.macros["master"]'>
+<body>
+
+<span metal:fill-slot='content'>
+<form action='receive.html'>
+Pay to Joerg
+<div>Amount<br />
+<input name='amount' value='' size='10' /></div>
+<div>Login<br />
+<input name='login' value='' size='10' /></div>
+<div>Pin<br />
+<input name='pin' value='' size='10' /></div>
+<input type="submit" />
+</form>
+</span>
+
+</body>
+</html>

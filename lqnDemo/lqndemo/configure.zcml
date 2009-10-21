@@ -8,6 +8,25 @@
     view=".views.index"
     />
 
+  <view
+    for=".models.lqnServer"
+    name='send.html'
+    view=".views.send"
+    />
+  <view
+    for=".models.lqnServer"
+    name='receive.html'
+    view=".views.receive"
+    />
+
+  <view
+    for=".models.lqnServer"
+    name='transactions.html'
+    view=".views.transactions"
+    />
+
+
+
 <!--    <scan package="."/> -->
 
 

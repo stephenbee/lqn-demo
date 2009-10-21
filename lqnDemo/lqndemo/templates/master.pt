@@ -1,7 +1,9 @@
 <html metal:define-macro='master'>
 <body>
-Header
+<div style='float:left; margin-right: 20px'>Hi Joerg </div>
+<div style='float:left; margin-left:20px;margin-right: 20px; text-align:center'><a href='/'>Home </a></div>
+<div style='text-align: right'>Logout</div>
+<hr />
 <span metal:define-slot='content' />
-Footer
 </body>
 </html>
