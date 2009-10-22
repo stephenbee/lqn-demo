@@ -2,32 +2,11 @@
 <body>
 
 <span metal:fill-slot='content'>
-<div>You have 789 Katz</div>
+<p>You have 786 Katz</p>
 <p><a href='send.html'> send katz</a> or <a href='receive.html'>receive as merchant</a></p>
-Last transactions:&nbsp;&nbsp;&nbsp;<a href='transactions.html'>see all</a>
-<table>
-    <tr>
-        <th>Date</th>
-        <th>From</th>
-        <th>To</th>
-        <th align='right'>Amount</th>
-    </tr>        
-    <tr>
-        <td>1.12.09 14:00</td>
-        <td>Lisa</td>
-        <td>You</td>
-        <td align='right'>7</td>
-    </tr>
-    
-    <tr>
-        <td>30.10.09 17:28</td>
-        <td>Alice</td>
-        <td>You</td>
-        <td align='right'>14</td>
-    </tr>
-
-</table>
+<p>Last transactions:&nbsp;&nbsp;&nbsp;<a href='transactions.html'>see all</a></p>
+<p>1.12.09 14:00: 7 katz from Lisa to you<br/>
+1.12.09 14:00: 7 katz from you to Alice</p>
 </span>
-
 </body>
 </html>

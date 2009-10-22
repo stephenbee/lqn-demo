@@ -2,6 +2,11 @@ from persistent.mapping import PersistentMapping
 from interfaces import IlqnServer, IAccountContainer, ITransactionContainer, IAccount, ITransaction
 from zope.interface import implements
 from persistent.dict import PersistentDict
+from repoze.bfg.security import Everyone, Allow, Deny, Authenticated
+from security import users
+
+
+
 class MyModel(PersistentMapping):
     __parent__ = __name__ = None
 
@@ -102,15 +107,47 @@ class lqnServer(BaseContainer):
     __parent__ = __name__ = None
     implements(IlqnServer)
 
+    def __init__(self):
+        super(lqnServer,self).__init__()
+        self.__acl__ = [
+            (Allow, Authenticated, 'view'),
+            (Deny, Everyone, 'view'),]
+
+
+
+
+
 class Accounts(BaseContainer):
 
     def __init__ (self):
+        super(Accounts,self).__init__()
         self.__parent__ = None
         self.__name__ = None
+        self.counter=10001
+
+    def addAccount(self,realname,password=''):
+        id = str(self.counter)
+        self.counter +=1
+        account = Account(realname,password)
+        self[id] = account
+        return account
+
+class Account(BaseContainer):
+
+    def __init__ (self,realname,password=''):
+        super(Account,self).__init__()
+        self.__parent__ = None
+        self.__name__ = None
+        if not password:
+            password='321'
+        self.password=password
+        self.realname=realname
+
 
 class Transactions(BaseContainer):
     
     def __init__(self):
+        super(Transactions,self).__init__()
         self.__parent__ = None
         self.__name__ = None
 
@@ -118,6 +155,8 @@ def appmaker(zodb_root):
     if not 'app_root' in zodb_root:
         app_root = lqnServer()
         app_root['accounts'] = Accounts()
+        for user,password in users:
+            app_root['accounts'].addAccount(user,password)
         app_root['transactions'] = Transactions()
         zodb_root['app_root'] = app_root
         import transaction

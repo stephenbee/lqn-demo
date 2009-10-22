@@ -9,7 +9,7 @@ class IAccountContainer(Interface):
     """An account container"""
     __name__=TextLine(title=u'accounts')
 
-    def addAccount(name,realname):
+    def addAccount(realname,password=''):
         """returns a new account object"""
 
 class ITransactionContainer(Interface):
@@ -20,8 +20,7 @@ class ITransactionContainer(Interface):
         """returns a new transaction object"""
 
 class IAccount(Interface):
-    __name__= TextLine(title=u'short_name')
-    id = Int(title=u'number/login to the account')
+    __name__= TextLine(title=u'short_name/account number')
     password = TextLine(title=u'the password')
     realname = TextLine(title=u'the name of the account holder')
 

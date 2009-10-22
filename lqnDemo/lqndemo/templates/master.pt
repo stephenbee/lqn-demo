@@ -1,8 +1,10 @@
 <html metal:define-macro='master'>
 <body>
-<div style='float:left; margin-right: 20px'>Hi Joerg </div>
+<div style='float:left; margin-right: 20px'><span tal:condition='logged_in'
+                                                  tal:define='account context.accounts.get(logged_in,None)'>Hello <c tal:replace='account.realname' /> (<c tal:replace='logged_in' />)</span></div>
 <div style='float:left; margin-left:20px;margin-right: 20px; text-align:center'><a href='/'>Home </a></div>
-<div style='text-align: right'>Logout</div>
+<div style='text-align: right'><a  tal:condition='logged_in' href='logout.html'>Logout</a>&nbsp;</div>
+
 <hr />
 <span metal:define-slot='content' />
 </body>

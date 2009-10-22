@@ -6,26 +6,55 @@
   <view
     for=".models.lqnServer"
     view=".views.index"
+    permission="view"
     />
 
   <view
     for=".models.lqnServer"
     name='send.html'
     view=".views.send"
+    permission="view"
     />
   <view
     for=".models.lqnServer"
     name='receive.html'
     view=".views.receive"
+    permission="view"
     />
 
   <view
     for=".models.lqnServer"
     name='transactions.html'
     view=".views.transactions"
+    permission="view"
+    />
+
+  <view
+    for=".models.lqnServer"
+    name='login.html'
+    view=".views.login"
+    />
+
+  <view
+    for=".models.lqnServer"
+    name='logout.html'
+    view=".views.logout"
     />
 
 
+  <forbidden
+    view=".views.login"/>
+
+  <authtktauthenticationpolicy
+     secret="mysupersecret"
+     cookie_name="lqn_auth"
+     callback=".security.groupfinder"
+     secure="false"
+     include_ip="false"
+     timeout="86400"
+     reissue_time="600"/>
+
+  <aclauthorizationpolicy/>
 
 <!--    <scan package="."/> -->
 
