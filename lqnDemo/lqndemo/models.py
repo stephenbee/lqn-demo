@@ -4,7 +4,7 @@ from zope.interface import implements
 from persistent.dict import PersistentDict
 from repoze.bfg.security import Everyone, Allow, Deny, Authenticated
 from security import users
-
+from datetime import datetime
 
 
 class MyModel(PersistentMapping):
@@ -140,25 +140,130 @@ class Account(BaseContainer):
         self.__name__ = None
         if not password:
             password='321'
-        self.password=password
+        self.password=str(password)
         self.realname=realname
+        self.__balance__ = 0;
+
+    def balance(self):
+        return self.__balance__
+
+    def updateBalance(self):
+        balance = 0
+        for t in self.myTransactions():
+            if t.source == self.__name__:
+                balance -= t.amount
+            else:
+                balance += t.amount                    
+        self.__balance__ = balance
+        return self.balance()
+
+    def _transactions(self):
+        return self.__parent__.__parent__['transactions']
+
+    def sort(self,transactions):
+        tmp = [(t.date,t) for t in transactions]
+        tmp.sort()
+        return [t[1] for t in tmp]
+
+
+    def myTransactions(self):
+        out = []
+        for t in self._transactions().values():
+            if t.source == self.__name__ or t.target == self.__name__:
+                out.append(t)     
+        return self.sort(out)                
+
+    def incoming(self):
+        ts = []
+        for t in self._transactions().values():
+            if t.target == self.__name__:
+                ts.append(t)
+        return ts                
+    
+    def outgoing(self):
+        ts = []
+        for t in self._transactions().values():
+            if t.source == self.__name__:
+                ts.append(t)
+        return ts                
+
+    def transfer(self,target,amount):
+        return self._transactions().addTransaction(self.__name__,target,amount)
 
 
 class Transactions(BaseContainer):
+    """ 
+    Could test here or in Accounts
+    >>> root = make_root()
+    >>> accounts = root['accounts']
+    >>> transactions = root['transactions']
+    >>> jhb = accounts['10001']
+    >>> stephen = accounts['10002']
+    >>> fabio = accounts['10003']
+    >>> t = transactions.addTransaction(jhb.__name__,stephen.__name__,1)
+    >>> jhb.balance()
+    -1
+    >>> stephen.balance()
+    1
+    >>> t = jhb.transfer(fabio.__name__,23)
+    >>> jhb.balance()
+    -24
+    >>> fabio.balance()
+    23
+    >>> ts = [t.amount for t in jhb.myTransactions()]
+    >>> ts == [1,23]
+    True
+     
     
+    """ 
     def __init__(self):
         super(Transactions,self).__init__()
         self.__parent__ = None
         self.__name__ = None
+        self.counter=1001
+
+    def addTransaction(self,source,target,amount):
+        trans = Transaction(source,target,amount)
+        id = str(self.counter)
+        self.counter += 1
+        self[id] = trans
+        sac = self.__parent__['accounts'][source]
+        tac = self.__parent__['accounts'][target]
+        sac.updateBalance()
+        tac.updateBalance()
+        return trans
+
+class Transaction(BaseContainer):
+
+    def __init__ (self,source,target,amount):
+        super(Transaction,self).__init__()
+        self.__parent__ = None
+        self.__name__ = None
+        self.source = source
+        self.target = target
+        self.amount = amount
+        self.date = datetime.now()
+
+
+def make_root():
+    """ 
+    >>> root = make_root()
+    >>> sorted(root['accounts'].keys())
+    ['10001', '10002', '10003', '10004', '10005']
+    >>> root['accounts']['10001'].password
+    '123'
+    """
+    app_root = lqnServer()
+    app_root['accounts'] = Accounts()
+    for user,password in users:
+        app_root['accounts'].addAccount(user,password)
+    app_root['transactions'] = Transactions()
+    return app_root
+
 
 def appmaker(zodb_root):
     if not 'app_root' in zodb_root:
-        app_root = lqnServer()
-        app_root['accounts'] = Accounts()
-        for user,password in users:
-            app_root['accounts'].addAccount(user,password)
-        app_root['transactions'] = Transactions()
-        zodb_root['app_root'] = app_root
+        zodb_root['app_root'] = make_root()
         import transaction
         transaction.commit()
     return zodb_root['app_root']

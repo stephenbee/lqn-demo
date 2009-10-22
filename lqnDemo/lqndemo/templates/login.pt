@@ -7,7 +7,7 @@
 
 <div><span tal:replace="message" />&nbsp; </div>
     Login:<br />
-    <input type="text" name="login" value=""/>
+    <input name="login" value="" type="number"/>
     <br/>
     Pin:<br />
     <input type="password" name="password" value=""/>

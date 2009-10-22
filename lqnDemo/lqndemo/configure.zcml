@@ -52,7 +52,7 @@
      secure="false"
      include_ip="false"
      timeout="86400"
-     reissue_time="600"/>
+     reissue_time="43200"/>
 
   <aclauthorizationpolicy/>
 
