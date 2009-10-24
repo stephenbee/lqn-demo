@@ -24,50 +24,37 @@ class BaseContainer(PersistentMapping):
         [u'bar']
         
     """
-    def __init__(self):
-        self.data = PersistentDict()
-    
-    def __getitem__(self, key):
-        return self.data.__getitem__(key)
     
     def __setitem__(self, key, value):
         """ Acts as a proxy to the self.data PersistentDict. As it is a
             persistent object, it will also try and assign the __parent__
             attrubute to any object stored through this interface.
             
-                >>> container = BaseContainer()
-                >>> container.__setitem__('foo', 'bar')
-                >>> 'foo' in container.data
-                True
-                >>> container['foo'].__parent__ # doctest: +ELLIPSIS
-                Traceback (most recent call last):
-                ...
-                AttributeError: 'str' object has no attribute '__parent__'
-                >>> class Child(object):
-                ...     __parent__ = None
-                ...
-                >>> container.__setitem__('baz', Child())
-                >>> 'baz' in container.data
-                True
-                >>> container['baz'].__parent__ == container
-                True
+            >>> container = BaseContainer()
+            >>> container.__setitem__('foo', 'bar')
+            >>> 'foo' in container.data
+            True
+            >>> container['foo'].__parent__ # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'str' object has no attribute '__parent__'
+            >>> class Child(object):
+            ...     __parent__ = None
+            ...
+            >>> container.__setitem__('baz', Child())
+            >>> 'baz' in container.data
+            True
+            >>> container['baz'].__parent__ == container
+            True
         """
-        ret = self.data.__setitem__(key, value)
+        ret = super(BaseContainer,self).__setitem__(key, value)
         try: 
             self.data[key].__parent__ = self
             self.data[key].__name__ = key
         except: pass
         return ret
     
-    def items(self):
-        return self.data.items()
-    
-    def keys(self):
-        return self.data.keys()
-    
-    def values(self):
-        return self.data.values()
-    
+   
     def update(self, _data={}, **kwargs):
         """ BaseContainers can be updated much the same as any Python dictionary.
             
@@ -152,7 +139,7 @@ class Account(BaseContainer):
         for t in self.myTransactions():
             if t.source == self.__name__:
                 balance -= t.amount
-            else:
+            if t.target == self.__name__:
                 balance += t.amount                    
         self.__balance__ = balance
         return self.balance()
@@ -163,6 +150,7 @@ class Account(BaseContainer):
     def sort(self,transactions):
         tmp = [(t.date,t) for t in transactions]
         tmp.sort()
+        tmp.reverse()
         return [t[1] for t in tmp]
 
 
@@ -213,6 +201,9 @@ class Transactions(BaseContainer):
     >>> ts = [t.amount for t in jhb.myTransactions()]
     >>> ts == [1,23]
     True
+    >>> t = jhb.transfer(jhb.__name__,1)
+    >>> jhb.balance()
+    -24
      
     
     """ 

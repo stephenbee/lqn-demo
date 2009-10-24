@@ -5,7 +5,6 @@
 
 <form action="/login.html" method="post">
 
-<div><span tal:replace="message" />&nbsp; </div>
     Login:<br />
     <input name="login" value="" type="number"/>
     <br/>

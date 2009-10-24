@@ -10,24 +10,46 @@ from webob.exc import HTTPFound
 def index(context,request):
     master = get_template('templates/master.pt')
     logged_in = authenticated_userid(request)
-    return rtr('templates/index.pt',context=context,request=request,master=master,logged_in=logged_in)
+    return rtr('templates/index.pt',context=context,request=request,master=master,logged_in=logged_in,message=None)
 
 def send(context,request):
-    if request.POST.has_key('amount'):
-        print 'sending something'
-    master = get_template('templates/master.pt')
+    post = request.POST
     logged_in = authenticated_userid(request)
-    return rtr('templates/send.pt',context=context,request=request,master=master,logged_in=logged_in)
+    accounts = context['accounts']
+    errors = {}
+    message = ''
+    if post.has_key('amount'):
+        amount = post.get('amount','')
+        try:
+            amount = int(amount)
+        except ValueError:
+            errors['amount'] = 'not a valid number'
+        if amount <= 0:
+            errors['amount'] = 'amount needs be at least 1'
+        target = post.get('target','')    
+        if not accounts.has_key(target):
+            errors['target'] = 'not a valid account'                
+
+        if errors:
+            message= 'please correct the errors'
+        else:       
+            source = accounts.get(logged_in)
+            source.transfer(target,amount)
+            return HTTPFound(location='/')
+    
+            
+    master = get_template('templates/master.pt')
+    return rtr('templates/send.pt',context=context,request=request,master=master,logged_in=logged_in,message=message,errors=errors)
 
 def receive(context,request):
     master = get_template('templates/master.pt')
     logged_in = authenticated_userid(request)
-    return rtr('templates/receive.pt',context=context,request=request,master=master,logged_in=logged_in)
+    return rtr('templates/receive.pt',context=context,request=request,master=master,logged_in=logged_in,message=None)
 
 def transactions(context,request):
     master = get_template('templates/master.pt')
     logged_in = authenticated_userid(request)
-    return rtr('templates/transactions.pt',context=context,request=request,master=master,logged_in=logged_in)
+    return rtr('templates/transactions.pt',context=context,request=request,master=master,logged_in=logged_in,message=None)
 
 def login(context,request):
     referrer = request.url
