@@ -6,7 +6,7 @@
 <div style='text-align: right'><a  tal:condition='logged_in' href='logout.html'>Logout</a>&nbsp;</div>
 
 <hr />
-<div><span style='color:red' tal:content="message" />&nbsp; </div>
+<div><span style='color:red' tal:content="message" /></div>
 <span metal:define-slot='content' />
 </body>
 </html>

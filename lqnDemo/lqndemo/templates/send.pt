@@ -2,7 +2,7 @@
 <body>
 
 <span metal:fill-slot='content'>
-<div>You have 789 Katz</div>
+<p>You have <c tal:replace='user.balance()' /> Katz</p>
 <form action='send.html' method='POST'>
 <div>Recipient <span style='color:red' tal:content='errors.get("target","")' /><br />
 <input name='target' tal:attributes='value request.POST.get("target","")' size='10' /></div>

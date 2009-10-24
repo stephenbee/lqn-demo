@@ -2,14 +2,14 @@
 <body>
 
 <span metal:fill-slot='content'>
-<form action='receive.html'>
-Pay to Joerg
-<div>Amount<br />
-<input name='amount' value='' size='10' /></div>
-<div>Login<br />
-<input name='login' value='' size='10' /></div>
-<div>Pin<br />
-<input name='pin' value='' size='10' /></div>
+<form action='receive.html' method='POST'>
+<p>Pay to <c tal:replace='user.realname' /></p>
+<div>amount <span style='color:red' tal:content='errors.get("amount","")' /><br />
+<input name='amount' value='' size='10' tal:attributes='value request.POST.get("amount","")' /></div>
+<div>customer login <span style='color:red' tal:content='errors.get("source","")' /><br />
+<input name='source' value='' size='10'  tal:attributes='value request.POST.get("source","")'/></div>
+<div>customer pin <span style='color:red' tal:content='errors.get("pin","")' /><br />
+<input name='pin' type='password' value='' size='10'  tal:attributes='value request.POST.get("pin","")'/></div>
 <input type="submit" />
 </form>
 </span>

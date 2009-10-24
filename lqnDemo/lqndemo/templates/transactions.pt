@@ -2,12 +2,15 @@
 <body>
 
 <span metal:fill-slot='content'>
-<div>You have 789 Katz</div>
+<p>You have <c tal:replace='user.balance()' /> Katz</p>
 
-<p>1.12.09 14:00: 7 katz from Lisa to you<br/>
-1.12.09 14:00: 7 katz from you to Alice<br />
-1.12.09 14:00: 7 katz from Lisa to you<br/>
-1.12.09 14:00: 7 katz from you to Alice</p>
+<p tal:repeat='t user.myTransactions()'>
+<c tal:replace='t.amount' /> katz
+from <c tal:replace='accounts.get(t.source).realname' />
+to  <c tal:replace='accounts.get(t.target).realname' /><br/>
+<span style='font-size:small;color:grey' tal:content='t.date.strftime("%d.%m.%Y %H:%M:%S")' />
+</p>
+
 
 </span>
 
