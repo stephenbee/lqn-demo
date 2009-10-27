@@ -6,8 +6,12 @@
 <form action='send.html' method='POST'>
 <div>Recipient <span style='color:red' tal:content='errors.get("target","")' /><br />
 <input name='target' tal:attributes='value request.POST.get("target","")' size='10' /></div>
+
 <div>Amount <span style='color:red' tal:content='errors.get("amount","")' /><br />
 <input name='amount' value='' size='10' tal:attributes='value request.POST.get("amount","")'/></div>
+
+<div>Pin <span style='color:red' tal:content='errors.get("pin","")' /><br />
+<input name='pin' value='' type='password' size='10'/></div>
 <input type="submit" />
 </form>
 </span>

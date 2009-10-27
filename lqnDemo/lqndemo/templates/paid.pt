@@ -5,7 +5,7 @@
 <p><c tal:replace='amount' /> katz were transfered
 from <c tal:replace='source.realname' />
 to <c tal:replace='target.realname' /></p>
-<p>Please hand the phone back to the merchant</p>
+<p>Please hand the phone back to <c tal:replace='target.realname' /></p>
 
 </span>
 

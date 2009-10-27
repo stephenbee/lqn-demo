@@ -121,6 +121,8 @@ class Accounts(BaseContainer):
 
 class Account(BaseContainer):
 
+    __startbalance__ = 200
+
     def __init__ (self,realname,password=''):
         super(Account,self).__init__()
         self.__parent__ = None
@@ -129,13 +131,13 @@ class Account(BaseContainer):
             password='321'
         self.password=str(password)
         self.realname=realname
-        self.__balance__ = 0;
+        self.__balance__ = self.__startbalance__
 
     def balance(self):
         return self.__balance__
 
     def updateBalance(self):
-        balance = 0
+        balance = self.__startbalance__
         for t in self.myTransactions():
             if t.source == self.__name__:
                 balance -= t.amount
@@ -178,10 +180,13 @@ class Account(BaseContainer):
     def transfer(self,target,amount):
         return self._transactions().addTransaction(self.__name__,target,amount)
 
+class InvalidTransaction(Exception):
+    pass
 
 class Transactions(BaseContainer):
     """ 
     Could test here or in Accounts
+    >>> startbalance = Account.__startbalance__
     >>> root = make_root()
     >>> accounts = root['accounts']
     >>> transactions = root['transactions']
@@ -189,20 +194,20 @@ class Transactions(BaseContainer):
     >>> stephen = accounts['10002']
     >>> fabio = accounts['10003']
     >>> t = transactions.addTransaction(jhb.__name__,stephen.__name__,1)
-    >>> jhb.balance()
+    >>> jhb.balance() - startbalance
     -1
-    >>> stephen.balance()
+    >>> stephen.balance() - startbalance
     1
     >>> t = jhb.transfer(fabio.__name__,23)
-    >>> jhb.balance()
+    >>> jhb.balance() - startbalance
     -24
-    >>> fabio.balance()
+    >>> fabio.balance() - startbalance
     23
     >>> ts = [t.amount for t in jhb.myTransactions()]
-    >>> ts == [1,23]
+    >>> ts == [23,1]
     True
     >>> t = jhb.transfer(jhb.__name__,1)
-    >>> jhb.balance()
+    >>> jhb.balance() - startbalance
     -24
      
     
@@ -213,13 +218,40 @@ class Transactions(BaseContainer):
         self.__name__ = None
         self.counter=1001
 
+    def isTransactionInvalid(self,source,target,amount):
+        errors = {}
+        accounts = self.__parent__['accounts']
+        if not accounts.has_key(source):
+            errors['source'] = 'source account does not exist'
+        if not accounts.has_key(target):
+            errors['target'] = 'target account does not exist'
+        try:
+            amount = int(amount)
+            if amount <= 0:
+                errors['amount'] = 'amount needs to be larger then 0'
+            elif (accounts[source].balance() - amount) < 0:
+                errors['amount'] = 'not enough funds'
+        except ValueError:
+            errors['amount'] = 'not a number'
+                   
+        if errors:
+            return errors
+        else:
+            return False
+
     def addTransaction(self,source,target,amount):
+        errors = self.isTransactionInvalid(source,target,amount)
+        if errors:
+            raise InvalidTransaction(errors)
+
+        amount = int(amount)                    
         trans = Transaction(source,target,amount)
         id = str(self.counter)
         self.counter += 1
         self[id] = trans
-        sac = self.__parent__['accounts'][source]
-        tac = self.__parent__['accounts'][target]
+        accounts = self.__parent__['accounts']
+        sac = accounts[source]
+        tac = accounts[target]
         sac.updateBalance()
         tac.updateBalance()
         return trans

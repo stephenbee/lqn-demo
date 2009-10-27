@@ -16,24 +16,19 @@ def send(context,request):
     post = request.POST
     logged_in = authenticated_userid(request)
     accounts = context['accounts']
-    errors = {}
+    errors={}
     message = ''
     if post.has_key('amount'):
+        source = accounts.get(logged_in)
         amount = post.get('amount','')
-        try:
-            amount = int(amount)
-        except ValueError:
-            errors['amount'] = 'not a valid number'
-        if amount <= 0:
-            errors['amount'] = 'amount needs be at least 1'
-        target = post.get('target','')    
-        if not accounts.has_key(target):
-            errors['target'] = 'not a valid account'                
+        target = post.get('target','')   
+        errors = context['transactions'].isTransactionInvalid(logged_in,target,amount)
+        if str(post.get('pin','')) != str(source.password):
+            errors['pin'] = 'wrong pin'
 
         if errors:
             message= 'please correct the errors'
         else:       
-            source = accounts.get(logged_in)
             source.transfer(target,amount)
             return HTTPFound(location='/')
     
@@ -42,27 +37,20 @@ def send(context,request):
     return rtr('templates/send.pt',context=context,request=request,master=master,logged_in=logged_in,message=message,errors=errors)
 
 def receive(context,request):
-    master = get_template('templates/master.pt')
+    post = request.POST
     logged_in = authenticated_userid(request)
     accounts = context['accounts']
-    errors = {}
+    errors={}
     message = ''
-    post = request.POST
+    master = get_template('templates/master.pt')
     if post.has_key('amount'):
-        amount = post.get('amount','')
-        try:
-            amount = int(amount)
-        except ValueError:
-            errors['amount'] = 'not a valid number'
-        if amount <= 0:
-            errors['amount'] = 'amount needs be at least 1'
         source = post.get('source','')    
-        if not accounts.has_key(source):
-            errors['source'] = 'not a valid account'                
-        else:
-            pin = post.get('pin','')
-            if pin != accounts.get(source).password:
-                errors['pin'] = 'invalid password'
+        amount = post.get('amount','')
+        target = accounts.get(logged_in)
+        errors = context['transactions'].isTransactionInvalid(source,logged_in,amount)
+        if str(post.get('pin','')) != str(target.password):
+            errors['pin'] = 'invalid pin'
+
         if errors:
             message= 'please correct the errors'
         else:       
