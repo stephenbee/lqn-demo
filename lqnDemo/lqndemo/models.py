@@ -346,8 +346,8 @@ class Voucher(BaseContainer):
         self.used = None #transaction id
         
         #http://code.google.com/intl/de/apis/chart/types.html
-        width = 100
-        height = 100
+        width = 150
+        height = 150
         path = '/vouchers/%s/redeem.html' % self.hash
         errorcorrection = 'H|0'
         redeemurl = baseurl+path
@@ -357,7 +357,7 @@ class Voucher(BaseContainer):
                     chld='H|0',
                     chs='%sx%s' % (width,height))
         qrurl = 'http://chart.apis.google.com/chart?%s' % urllib.urlencode(data)
-        #print 'qrurl: %s' % qrurl
+        print 'qrurl: %s' % qrurl
         opener = urllib2.urlopen(qrurl)
         if opener.headers['content-type'] != 'image/png':
             raise BadContentTypeException('Server responded with a content-type of %s' % opener.headers['content-type'])

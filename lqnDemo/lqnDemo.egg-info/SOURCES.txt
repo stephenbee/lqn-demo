@@ -8,6 +8,7 @@ lqnDemo.egg-info/not-zip-safe
 lqnDemo.egg-info/requires.txt
 lqnDemo.egg-info/top_level.txt
 lqndemo/__init__.py
+lqndemo/interfaces.py
 lqndemo/models.py
 lqndemo/run.py
 lqndemo/tests.py
