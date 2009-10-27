@@ -1,5 +1,5 @@
 <html metal:define-macro='master'>
-<body tal:define='accounts context["accounts"];
+<body tal:define='accounts context.root["accounts"];
                   user accounts.get(logged_in,None);'>
 <div style='float:left; margin-right: 20px'><span tal:condition='user != None'>Hello <c tal:replace='user.realname' /> (<c tal:replace='logged_in' />)</span></div>
 <div style='float:left; margin-left:20px;margin-right: 20px; text-align:center'><a href='/'>Home </a></div>

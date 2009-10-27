@@ -52,5 +52,6 @@ class ITransaction(Interface):
         """returns target object"""
 
 
-
+class IVoucher(Interface):
+    pass
 

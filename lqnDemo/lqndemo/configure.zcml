@@ -28,6 +28,28 @@
     view=".views.transactions"
     permission="view"
     />
+    
+  <view
+    for=".models.lqnServer"
+    name='vouchers.html'
+    view=".views.vouchers"
+    permission="view"
+    />
+
+  <view
+    for=".models.Voucher"
+    name='qrcode.png'
+    view=".views.qrcode"
+    permission="view"
+    />
+
+  <view
+    for=".models.Voucher"
+    name='redeem.html'
+    view=".views.redeem"
+    permission="view"
+    />
+
 
   <view
     for=".models.lqnServer"

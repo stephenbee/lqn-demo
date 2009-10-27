@@ -3,7 +3,8 @@
 
 <span metal:fill-slot='content'>
 <p>You have <c tal:replace='user.balance()' /> Katz</p>
-<p><a href='send.html'> send katz</a> or <a href='receive.html'>receive as merchant</a></p>
+<p><a href='send.html'> send katz</a> <a href='receive.html'>receive as merchant</a> 
+<a href='vouchers.html'>My vouchers</a></p>
 <p>Last transactions:&nbsp;&nbsp;&nbsp;<a href='transactions.html'>see all</a></p>
 <p tal:repeat='t user.myTransactions()[:3]'>
 <c tal:replace='t.amount' /> katz

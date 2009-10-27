@@ -6,6 +6,9 @@ from repoze.bfg.security import remember, forget
 from repoze.bfg.security import authenticated_userid
 from security import users
 from webob.exc import HTTPFound
+from models import Errors
+from webob import Response
+
 
 def index(context,request):
     master = get_template('templates/master.pt')
@@ -61,6 +64,24 @@ def receive(context,request):
 
     return rtr('templates/receive.pt',context=context,request=request,master=master,logged_in=logged_in,message=None,errors=errors)
 
+def redeem(context,request):
+    master = get_template('templates/master.pt')
+    logged_in = authenticated_userid(request)
+    errors = {}
+    post = request.POST
+    message = ''
+    if context.used:
+        message = 'Voucher is already used'
+        errors['voucher']   = message
+    elif post.has_key('amount'):
+        try:
+            trans = context.use(logged_in,post.get('amount'))
+            return HTTPFound(location='/')
+        except Errors, e:
+            errors = e.message
+    return rtr('templates/redeem.pt',context=context,request=request,master=master,logged_in=logged_in,message=message,errors=errors)
+
+
 def transactions(context,request):
     master = get_template('templates/master.pt')
     logged_in = authenticated_userid(request)
@@ -83,6 +104,25 @@ def login(context,request):
     master = get_template('templates/master.pt')
     logged_in = authenticated_userid(request)
     return rtr('templates/login.pt',context=context,request=request,master=master,message='',logged_in=logged_in,came_from=came_from)
+
+def vouchers(context,request):
+    master = get_template('templates/master.pt')
+    logged_in = authenticated_userid(request)
+    errors={}
+    post = request.POST
+    if 'amount' in post:
+        try:
+            trans = context['vouchers'].addVoucher(logged_in,post.get('amount'))
+        except Errors,e:
+            errors = e.message
+    return rtr('templates/vouchers.pt',context=context,request=request,master=master,logged_in=logged_in,message=None,errors=errors)
+  
+def qrcode(context,request):
+    response = Response()
+    response.status = 200
+    response.body = context.image
+    response.headerlist = [('Content-type', 'image/png')]
+    return response
 
 def logout(context, request):
     headers = forget(request)

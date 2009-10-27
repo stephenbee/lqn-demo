@@ -1,11 +1,11 @@
 from persistent.mapping import PersistentMapping
-from interfaces import IlqnServer, IAccountContainer, ITransactionContainer, IAccount, ITransaction
+from interfaces import IlqnServer, IAccountContainer, ITransactionContainer, IAccount, ITransaction,IVoucher
 from zope.interface import implements
 from persistent.dict import PersistentDict
 from repoze.bfg.security import Everyone, Allow, Deny, Authenticated
 from security import users
 from datetime import datetime
-
+import md5,random,urllib,urllib2
 
 class MyModel(PersistentMapping):
     __parent__ = __name__ = None
@@ -88,7 +88,13 @@ class BaseContainer(PersistentMapping):
             for key in getFields(interface).keys():
                 data[key] = getattr(self, key)
         return data
-    
+
+    @property
+    def root(self):
+        location = self
+        while location.__class__ != lqnServer:
+            location = location.__parent__
+        return location            
 
 class lqnServer(BaseContainer):    
     __parent__ = __name__ = None
@@ -149,19 +155,31 @@ class Account(BaseContainer):
     def _transactions(self):
         return self.__parent__.__parent__['transactions']
 
-    def sort(self,transactions):
-        tmp = [(t.date,t) for t in transactions]
+
+    def _vouchers(self):
+        return self.__parent__.__parent__['vouchers']
+
+
+    def myVouchers(self):
+        out = []
+        for v in self._vouchers().values():
+            if v.source == self.__name__:
+                out.append(v)     
+        return self.sortOnDate(out)                
+
+    def sortOnDate(self, objs):
+        tmp = [(t.date,t) for t in objs]
         tmp.sort()
         tmp.reverse()
         return [t[1] for t in tmp]
-
 
     def myTransactions(self):
         out = []
         for t in self._transactions().values():
             if t.source == self.__name__ or t.target == self.__name__:
                 out.append(t)     
-        return self.sort(out)                
+        return self.sortOnDate(out)                
+
 
     def incoming(self):
         ts = []
@@ -267,6 +285,107 @@ class Transaction(BaseContainer):
         self.amount = amount
         self.date = datetime.now()
 
+class Vouchers(BaseContainer):
+
+    def __init__ (self):
+        super(Vouchers,self).__init__()
+        self.__parent__ = None
+        self.__name__ = None
+
+    def addVoucher(self,source,amount,baseurl='http://localhost:6543'):
+        errors = {}
+        accounts = self.__parent__['accounts']
+        if not accounts.has_key(source):
+            errors['source'] = 'account does not exist'
+        try:
+            amount = int(amount)
+            if amount <=0:
+                errors['amount'] = 'needs to be at least 1'
+        except ValueError:
+            errors['amount'] = 'not a number'
+
+        if len(errors):
+            raise Errors(errors)            
+        voucher = Voucher(source,amount,baseurl)
+        self[voucher.hash] = voucher 
+        return voucher
+
+class Errors(Exception):
+    pass
+
+class Voucher(BaseContainer):
+    """
+    >>> root = make_root()
+    >>> voucher = root['vouchers'].addVoucher('10001',23)
+    >>> voucher.used == None
+    True
+    >>> try:
+    ...     voucher.use('10002',24)
+    ... except Errors, e:
+    ...     e.message ==  {'amount': 'amount is too high'}
+    True
+    >>> trans = voucher.use('10002',13)
+    >>> trans.amount
+    13
+    >>> voucher.used == trans.__name__
+    True
+    >>> acc = root['accounts']['10001']
+    >>> len(acc.myVouchers())
+    1
+    """
+    implements(IVoucher)
+
+    def __init__ (self,source,amount,baseurl='http://localhost:6543'):
+        super(Voucher,self).__init__()
+        self.__parent__ = None
+        self.__name__ = None
+        self.source = source
+        self.amount = amount
+        self.date = datetime.now()
+        self.hash = md5.md5(str(random.random())).hexdigest()
+        self.used = None #transaction id
+        
+        #http://code.google.com/intl/de/apis/chart/types.html
+        width = 100
+        height = 100
+        path = '/vouchers/%s/redeem.html' % self.hash
+        errorcorrection = 'H|0'
+        redeemurl = baseurl+path
+        self.redeemurl = redeemurl
+        data = dict(cht='qr',
+                    chl=redeemurl,
+                    chld='H|0',
+                    chs='%sx%s' % (width,height))
+        qrurl = 'http://chart.apis.google.com/chart?%s' % urllib.urlencode(data)
+        #print 'qrurl: %s' % qrurl
+        opener = urllib2.urlopen(qrurl)
+        if opener.headers['content-type'] != 'image/png':
+            raise BadContentTypeException('Server responded with a content-type of %s' % opener.headers['content-type'])
+        self.image=opener.read()
+
+    def use(self,target,amount):
+        accounts = self.__parent__.__parent__['accounts']
+        sac = accounts[self.source]
+        errors = {}
+        if not accounts.has_key(target):
+            errors['target'] = 'account does not exist'
+        try:
+            amount = int(amount)
+            if amount >= self.amount:
+                errors['amount'] = 'amount is too high'
+            elif amount < 0:
+                errors['amount'] = 'needs to be at least 1'
+
+        except ValueError:
+            errors['amount'] = 'not a number'
+           
+        if errors:
+            raise Errors(errors)
+
+        trans = sac.transfer(target,amount)
+        self.used = trans.__name__
+        return trans
+
 
 def make_root():
     """ 
@@ -281,6 +400,7 @@ def make_root():
     for user,password in users:
         app_root['accounts'].addAccount(user,password)
     app_root['transactions'] = Transactions()
+    app_root['vouchers'] = Vouchers()
     return app_root
 
 
