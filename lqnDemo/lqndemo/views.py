@@ -64,6 +64,18 @@ def receive(context,request):
 
     return rtr('templates/receive.pt',context=context,request=request,master=master,logged_in=logged_in,message=None,errors=errors)
 
+def vouchers(context,request):
+    master = get_template('templates/master.pt')
+    logged_in = authenticated_userid(request)
+    errors={}
+    post = request.POST
+    if 'amount' in post:
+        try:
+            trans = context['vouchers'].addVoucher(logged_in,post.get('amount'),context.application_url)
+        except Errors,e:
+            errors = e.message
+    return rtr('templates/vouchers.pt',context=context,request=request,master=master,logged_in=logged_in,message=None,errors=errors)
+
 def redeem(context,request):
     master = get_template('templates/master.pt')
     logged_in = authenticated_userid(request)
@@ -105,17 +117,6 @@ def login(context,request):
     logged_in = authenticated_userid(request)
     return rtr('templates/login.pt',context=context,request=request,master=master,message='',logged_in=logged_in,came_from=came_from)
 
-def vouchers(context,request):
-    master = get_template('templates/master.pt')
-    logged_in = authenticated_userid(request)
-    errors={}
-    post = request.POST
-    if 'amount' in post:
-        try:
-            trans = context['vouchers'].addVoucher(logged_in,post.get('amount'))
-        except Errors,e:
-            errors = e.message
-    return rtr('templates/vouchers.pt',context=context,request=request,master=master,logged_in=logged_in,message=None,errors=errors)
   
 def qrcode(context,request):
     response = Response()
