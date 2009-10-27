@@ -1,0 +1,14 @@
+<html metal:use-macro='master.macros["master"]'>
+<body>
+
+<span metal:fill-slot='content'>
+<form action='redeem.html' method='POST' tal:condition='errors.get("voucher",None) == None'>
+<p>Receive up to 50 katz from jhb</p>
+<div>actual amount to receive <span style='color:red' tal:content='errors.get("amount","")' /><br />
+<input name='amount' value='' size='10' tal:attributes='value request.POST.get("amount",context.amount)' /></div>
+<input type="submit" />
+</form>
+</span>
+
+</body>
+</html>

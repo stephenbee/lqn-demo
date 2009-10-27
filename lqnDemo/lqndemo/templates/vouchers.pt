@@ -1,0 +1,36 @@
+<html metal:use-macro='master.macros["master"]'>
+<body>
+
+<span metal:fill-slot='content'
+      tal:define='vouchers user.myVouchers()'>
+<p>You have <c tal:replace='user.balance()' /> Katz</p>
+<form action='vouchers.html' method='post'>
+<p>Add a voucher</p>
+<div>Amount <span style='color:red' tal:content='errors.get("amount","")' /><br />
+<input name='amount' value='' size='10' tal:attributes='value request.POST.get("amount","")'/></div>
+<input type='submit' value='create' />
+</form>
+
+<span tal:repeat='v vouchers'>
+<div style='border: 1px solid black; position:relative;white-space:nowrap; width:600px; height: 120px; margin-top:20px; padding:10px'>
+<img style='float:left; margin:10px;'   height='100' width='100' tal:attributes='src request.application_url+"/vouchers/"+v.hash+"/qrcode.png"'/> 
+<div><b><c tal:replace='v.amount'/> katz voucher from 
+<c tal:replace='accounts.get(v.source).realname' /></b></div>
+<div>
+    <span tal:condition='v.used' style='color:red'>
+        <span tal:define='trans context["transactions"].get(v.used);
+                          recipient context["accounts"].get(trans.target)'>
+        used up to pay <c tal:replace='trans.amount' /> katz 
+        to <c tal:replace='recipient.realname' /></span> 
+        </span>
+        &nbsp;
+</div>
+<div>Date issued: <span  tal:content='v.date.strftime("%d.%m.%Y %H:%M:%S")' /></div>
+<div>Serial:  <span  tal:content='v.hash' /></div>
+<p style='font-size:50%'><a tal:attributes='href v.redeemurl' tal:content='v.redeemurl'/></p>
+</div>
+</span>
+</span>
+
+</body>
+</html>
