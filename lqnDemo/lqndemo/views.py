@@ -71,7 +71,7 @@ def vouchers(context,request):
     post = request.POST
     if 'amount' in post:
         try:
-            trans = context['vouchers'].addVoucher(logged_in,post.get('amount'),context.application_url)
+            trans = context['vouchers'].addVoucher(logged_in,post.get('amount'),request.application_url)
         except Errors,e:
             errors = e.message
     return rtr('templates/vouchers.pt',context=context,request=request,master=master,logged_in=logged_in,message=None,errors=errors)
