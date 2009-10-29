@@ -12,7 +12,7 @@
 </form>
 
 <span tal:repeat='v vouchers'>
-<div style='border: 1px solid black; position:relative;white-space:nowrap; width:650px; height: 170px; margin-top:20px; padding:10px'>
+<div style='border: 1px solid black; position:relative;white-space:nowrap; width:650px; height: 170px; margin-top:20px; padding-top:10px'>
 <img style='float:left; margin:10px;'   height='150' width='150' tal:attributes='src request.application_url+"/vouchers/"+v.hash+"/qrcode.png"'/> 
 <div><b><c tal:replace='v.amount'/> katz voucher from 
 <c tal:replace='accounts.get(v.source).realname' /></b></div>

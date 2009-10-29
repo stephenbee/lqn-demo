@@ -348,7 +348,7 @@ class Voucher(BaseContainer):
         #http://code.google.com/intl/de/apis/chart/types.html
         width = 150
         height = 150
-        path = '/vouchers/%s/redeem.html' % self.hash
+        path = '/vouchers/%s/r' % self.hash
         errorcorrection = 'H|0'
         redeemurl = baseurl+path
         self.redeemurl = redeemurl

@@ -45,7 +45,7 @@
 
   <view
     for=".models.Voucher"
-    name='redeem.html'
+    name='r'
     view=".views.redeem"
     permission="view"
     />
