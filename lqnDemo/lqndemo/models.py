@@ -153,11 +153,11 @@ class Account(BaseContainer):
         return self.balance()
 
     def _transactions(self):
-        return self.__parent__.__parent__['transactions']
+        return self.root['transactions']
 
 
     def _vouchers(self):
-        return self.__parent__.__parent__['vouchers']
+        return self.root['vouchers']
 
 
     def myVouchers(self):
@@ -227,7 +227,10 @@ class Transactions(BaseContainer):
     >>> t = jhb.transfer(jhb.__name__,1)
     >>> jhb.balance() - startbalance
     -24
-     
+    >>> t = jhb.transfer(fabio.__name__,2000)
+    Traceback (most recent call last):
+     ...
+    Errors: {'amount': 'not enough funds'}
     
     """ 
     def __init__(self):
@@ -238,7 +241,7 @@ class Transactions(BaseContainer):
 
     def isTransactionInvalid(self,source,target,amount):
         errors = {}
-        accounts = self.__parent__['accounts']
+        accounts = self.root['accounts']
         if not accounts.has_key(source):
             errors['source'] = 'source account does not exist'
         if not accounts.has_key(target):
@@ -253,21 +256,18 @@ class Transactions(BaseContainer):
             errors['amount'] = 'not a number'
                    
         if errors:
-            return errors
+            raise Errors(errors)
         else:
             return False
 
     def addTransaction(self,source,target,amount):
-        errors = self.isTransactionInvalid(source,target,amount)
-        if errors:
-            raise InvalidTransaction(errors)
-
+        self.isTransactionInvalid(source,target,amount)
         amount = int(amount)                    
         trans = Transaction(source,target,amount)
         id = str(self.counter)
         self.counter += 1
         self[id] = trans
-        accounts = self.__parent__['accounts']
+        accounts = self.root['accounts']
         sac = accounts[source]
         tac = accounts[target]
         sac.updateBalance()
@@ -294,7 +294,7 @@ class Vouchers(BaseContainer):
 
     def addVoucher(self,source,amount,baseurl='http://localhost:6543'):
         errors = {}
-        accounts = self.__parent__['accounts']
+        accounts = self.root['accounts']
         if not accounts.has_key(source):
             errors['source'] = 'account does not exist'
         try:
@@ -357,10 +357,13 @@ class Voucher(BaseContainer):
                     chld='H|0',
                     chs='%sx%s' % (width,height))
         qrurl = 'http://chart.apis.google.com/chart?%s' % urllib.urlencode(data)
-        print 'qrurl: %s' % qrurl
-        opener = urllib2.urlopen(qrurl)
-        if opener.headers['content-type'] != 'image/png':
-            raise BadContentTypeException('Server responded with a content-type of %s' % opener.headers['content-type'])
+        #print 'qrurl: %s' % qrurl
+        try:
+            opener = urllib2.urlopen(qrurl)
+            if opener.headers['content-type'] != 'image/png':
+                raise BadContentTypeException('Server responded with a content-type of %s' % opener.headers['content-type'])
+        except urllib2.URLError:
+            opener = open('lqndemo/templates/dummyqr.png')
         self.image=opener.read()
 
     def use(self,target,amount):

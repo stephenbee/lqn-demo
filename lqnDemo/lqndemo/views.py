@@ -25,14 +25,17 @@ def send(context,request):
         source = accounts.get(logged_in)
         amount = post.get('amount','')
         target = post.get('target','')   
-        errors = context['transactions'].isTransactionInvalid(logged_in,target,amount)
+        #errors = context['transactions'].isTransactionInvalid(logged_in,target,amount)
         if str(post.get('pin','')) != str(source.password):
             errors['pin'] = 'wrong pin'
+        try:
+            source.transfer(target,amount)
+        except Errors, e:
+            errors.update(e.message)
 
-        if errors:
+        if len(errors):
             message= 'please correct the errors'
         else:       
-            source.transfer(target,amount)
             return HTTPFound(location='/')
     
             
@@ -50,17 +53,20 @@ def receive(context,request):
         source = post.get('source','')    
         amount = post.get('amount','')
         target = accounts.get(logged_in)
-        errors = context['transactions'].isTransactionInvalid(source,logged_in,amount)
+        #errors = context['transactions'].isTransactionInvalid(source,logged_in,amount)
         if str(post.get('pin','')) != str(target.password):
             errors['pin'] = 'invalid pin'
 
-        if errors:
-            message= 'please correct the errors'
-        else:       
+        try:
             tacc = accounts.get(logged_in)
             sacc = accounts.get(source)
             sacc.transfer(logged_in,amount)
             return rtr('templates/paid.pt',context=context,request=request,master=master,logged_in=logged_in,source=sacc,target=tacc,amount=amount,message=message)
+        except Errors, e:
+            errors.update(e.message)
+
+        if errors:
+            message= 'please correct the errors'
 
     return rtr('templates/receive.pt',context=context,request=request,master=master,logged_in=logged_in,message=None,errors=errors)
 
