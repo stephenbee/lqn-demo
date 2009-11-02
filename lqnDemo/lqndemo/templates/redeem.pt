@@ -2,7 +2,7 @@
 <body>
 
 <span metal:fill-slot='content'>
-<form action='redeem.html' method='POST' tal:condition='errors.get("voucher",None) == None'>
+<form action='r' method='POST' tal:condition='errors.get("voucher",None) == None'>
 <p>Receive up to <c tal:replace='context.amount' /> katz from <c tal:replace='context.root["accounts"].get(context.source).realname' /></p>
 <div>actual amount to receive <span style='color:red' tal:content='errors.get("amount","")' /><br />
 <input name='amount' value='' size='10' tal:attributes='value request.POST.get("amount",context.amount)' /></div>
