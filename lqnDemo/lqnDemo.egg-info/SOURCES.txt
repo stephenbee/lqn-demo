@@ -11,5 +11,6 @@ lqndemo/__init__.py
 lqndemo/interfaces.py
 lqndemo/models.py
 lqndemo/run.py
+lqndemo/security.py
 lqndemo/tests.py
 lqndemo/views.py

@@ -8,6 +8,7 @@ from security import users
 from webob.exc import HTTPFound
 from models import Errors
 from webob import Response
+import logging
 
 
 def index(context,request):
@@ -16,6 +17,7 @@ def index(context,request):
     return rtr('templates/index.pt',context=context,request=request,master=master,logged_in=logged_in,message=None)
 
 def send(context,request):
+    logging.debug("Sending katz...")
     post = request.POST
     logged_in = authenticated_userid(request)
     accounts = context['accounts']
@@ -25,11 +27,14 @@ def send(context,request):
         source = accounts.get(logged_in)
         amount = post.get('amount','')
         target = post.get('target','')   
+	logging.debug("Source: %s Amount: %s Target: %s",source,amount,target)
         #errors = context['transactions'].isTransactionInvalid(logged_in,target,amount)
         if str(post.get('pin','')) != str(source.password):
+	    logging.error("views.py::send Wrong pin")
             errors['pin'] = 'wrong pin'
         try:
             source.transfer(target,amount)
+       	    logging.debug("Sending katz successful")
         except Errors, e:
             errors.update(e.message)
 
@@ -43,6 +48,7 @@ def send(context,request):
     return rtr('templates/send.pt',context=context,request=request,master=master,logged_in=logged_in,message=message,errors=errors)
 
 def receive(context,request):
+    logging.debug("Receiving Katz...")
     post = request.POST
     logged_in = authenticated_userid(request)
     accounts = context['accounts']
@@ -53,8 +59,10 @@ def receive(context,request):
         source = post.get('source','')    
         amount = post.get('amount','')
         target = accounts.get(logged_in)
+	logging.debug("Source: %s Amount: %s Target: %s",source,amount,target)
         #errors = context['transactions'].isTransactionInvalid(source,logged_in,amount)
         if str(post.get('pin','')) != str(target.password):
+	    logging.error("views.py::receive Invalid pin")
             errors['pin'] = 'invalid pin'
 
         try:
@@ -77,8 +85,11 @@ def vouchers(context,request):
     post = request.POST
     if 'amount' in post:
         try:
+	    logging.debug("views.py::vouchers Adding voucher")
             trans = context['vouchers'].addVoucher(logged_in,post.get('amount'),request.application_url)
+	    logging.debug("views.py::vouchers Adding voucher ok")
         except Errors,e:
+	    logging.error(e.message)
             errors = e.message
     return rtr('templates/vouchers.pt',context=context,request=request,master=master,logged_in=logged_in,message=None,errors=errors)
 
@@ -90,10 +101,13 @@ def redeem(context,request):
     message = ''
     if context.used:
         message = 'Voucher is already used'
+	logging.error("views.py::redeem " + message)
         errors['voucher']   = message
     elif post.has_key('amount'):
         try:
+	    logging.debug("views.py::redeem Redeeming voucher..." )
             trans = context.use(logged_in,post.get('amount'))
+	    logging.debug("views.py::redeem Redeeming voucher ok." )
             return HTTPFound(location='/')
         except Errors, e:
             errors = e.message
@@ -110,6 +124,7 @@ def login(context,request):
     if referrer == '/login.html':
         referrer = '/' # never use the login form itself as came_from
     came_from = request.params.get('came_from', referrer)
+    logging.debug("views.py::login Logging in...")
     if 'login' in request.POST.keys():
         login = request.params['login']
         password = request.params['password']
@@ -117,6 +132,7 @@ def login(context,request):
         #import pdb; pdb.set_trace()
         if password and accounts.has_key(login) and str(password) == str(accounts.get(login).password):
             headers = remember(request, login)
+            logging.debug("views.py::login : Login OK.")
             return HTTPFound(location = came_from,
                              headers = headers)
     master = get_template('templates/master.pt')
@@ -132,7 +148,9 @@ def qrcode(context,request):
     return response
 
 def logout(context, request):
+    logging.debug("Logging out...")
     headers = forget(request)
+    logging.debug("Logged out")
     return HTTPFound(location = '/',
                      headers = headers)
 

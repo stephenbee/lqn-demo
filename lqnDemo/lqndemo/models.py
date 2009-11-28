@@ -6,6 +6,7 @@ from repoze.bfg.security import Everyone, Allow, Deny, Authenticated
 from security import users
 from datetime import datetime
 import md5,random,urllib,urllib2
+import logging
 
 class MyModel(PersistentMapping):
     __parent__ = __name__ = None
@@ -101,10 +102,12 @@ class lqnServer(BaseContainer):
     implements(IlqnServer)
 
     def __init__(self):
+	logging.info("Initializing lqnServer...")
         super(lqnServer,self).__init__()
         self.__acl__ = [
             (Allow, Authenticated, 'view'),
             (Deny, Everyone, 'view'),]
+	logging.info("Done.")
 
 
 
@@ -123,6 +126,7 @@ class Accounts(BaseContainer):
         self.counter +=1
         account = Account(realname,password)
         self[id] = account
+	logging.debug("Added account %s",realname)
         return account
 
 class Account(BaseContainer):
@@ -150,6 +154,7 @@ class Account(BaseContainer):
             if t.target == self.__name__:
                 balance += t.amount                    
         self.__balance__ = balance
+	logging.debug("Balance updated for account %s",self.realname)
         return self.balance()
 
     def _transactions(self):
@@ -243,16 +248,21 @@ class Transactions(BaseContainer):
         errors = {}
         accounts = self.root['accounts']
         if not accounts.has_key(source):
+	    logging.error("Source account does not exist")
             errors['source'] = 'source account does not exist'
         if not accounts.has_key(target):
+	    logging.error("Target account does not exist")
             errors['target'] = 'target account does not exist'
         try:
             amount = int(amount)
             if amount <= 0:
-                errors['amount'] = 'amount needs to be larger then 0'
+		logging.error("Amount needs to be larger than 0")
+                errors['amount'] = 'amount needs to be larger than 0'
             elif (accounts[source].balance() - amount) < 0:
+		logging.error("Not enough funds")
                 errors['amount'] = 'not enough funds'
         except ValueError:
+	    logging.error("IsTransactionInvalid: Not a number")
             errors['amount'] = 'not a number'
                    
         if errors:
@@ -261,6 +271,7 @@ class Transactions(BaseContainer):
             return False
 
     def addTransaction(self,source,target,amount):
+	logging.debug("Adding Transaction: %s %s %s", source,target,amount)
         self.isTransactionInvalid(source,target,amount)
         amount = int(amount)                    
         trans = Transaction(source,target,amount)
@@ -272,6 +283,7 @@ class Transactions(BaseContainer):
         tac = accounts[target]
         sac.updateBalance()
         tac.updateBalance()
+	logging.debug("Transaction added")
         return trans
 
 class Transaction(BaseContainer):
@@ -293,21 +305,26 @@ class Vouchers(BaseContainer):
         self.__name__ = None
 
     def addVoucher(self,source,amount,baseurl='http://localhost:6543'):
+	logging.debug("Adding voucher...")
         errors = {}
         accounts = self.root['accounts']
         if not accounts.has_key(source):
+	    logging.error("Account does not exist")
             errors['source'] = 'account does not exist'
         try:
             amount = int(amount)
             if amount <=0:
+		logging.error("Amount needs to be at least 1")
                 errors['amount'] = 'needs to be at least 1'
         except ValueError:
+	    logging.error("addVoucher: not a number")
             errors['amount'] = 'not a number'
 
         if len(errors):
             raise Errors(errors)            
         voucher = Voucher(source,amount,baseurl)
         self[voucher.hash] = voucher 
+	logging.debug("Voucher added")
         return voucher
 
 class Errors(Exception):
@@ -367,19 +384,24 @@ class Voucher(BaseContainer):
         self.image=opener.read()
 
     def use(self,target,amount):
+	logging.debug("Voucher::use Using voucher: %s %s" ,target,amount)
         accounts = self.__parent__.__parent__['accounts']
         sac = accounts[self.source]
         errors = {}
         if not accounts.has_key(target):
+	    logging.error("Voucher::use Account does not exist")
             errors['target'] = 'account does not exist'
         try:
             amount = int(amount)
             if amount >= self.amount:
+	    	logging.error("Voucher::use Amount is too high")
                 errors['amount'] = 'amount is too high'
             elif amount < 0:
+	    	logging.error("Voucher::use Amount needs to be at least 1")
                 errors['amount'] = 'needs to be at least 1'
 
         except ValueError:
+	    logging.error("Voucher::use Value error: Not a number")
             errors['amount'] = 'not a number'
            
         if errors:
@@ -387,6 +409,7 @@ class Voucher(BaseContainer):
 
         trans = sac.transfer(target,amount)
         self.used = trans.__name__
+	logging.debug("Voucher::use Voucher used")
         return trans
 
 
@@ -399,11 +422,16 @@ def make_root():
     '123'
     """
     app_root = lqnServer()
+    logging.debug("Setting up root app...")
     app_root['accounts'] = Accounts()
+    logging.debug("Setting up accounts...")
     for user,password in users:
         app_root['accounts'].addAccount(user,password)
+    logging.debug("Setting up transactions...")
     app_root['transactions'] = Transactions()
+    logging.debug("Setting up vouchers...")
     app_root['vouchers'] = Vouchers()
+    logging.debug("Root app set up.")
     return app_root
 
 

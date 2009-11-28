@@ -1,5 +1,6 @@
 from repoze.bfg.router import make_app
 from repoze.zodbconn.finder import PersistentApplicationFinder
+import logging
 
 def app(global_config, **kw):
     """ This function returns a repoze.bfg.router.Router object.
@@ -7,6 +8,7 @@ def app(global_config, **kw):
     It is usually called by the PasteDeploy framework during ``paster serve``.
     """
     # paster app config callback
+    logging.debug("Setting up app...")
     import lqndemo
     from lqndemo.models import appmaker
     zodb_uri = kw.get('zodb_uri')
