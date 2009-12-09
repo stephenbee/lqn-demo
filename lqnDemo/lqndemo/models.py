@@ -393,7 +393,7 @@ class Voucher(BaseContainer):
             errors['target'] = 'account does not exist'
         try:
             amount = int(amount)
-            if amount >= self.amount:
+            if amount > self.amount:
 	    	logging.error("Voucher::use Amount is too high")
                 errors['amount'] = 'amount is too high'
             elif amount < 0:
