@@ -1,6 +1,8 @@
 from persistent.mapping import PersistentMapping
 from interfaces import IlqnServer, IAccountContainer, ITransactionContainer, IAccount, ITransaction,IVoucher
 from zope.interface import implements
+from zope.interface import providedBy
+from zope.schema._schema import getFields
 from persistent.dict import PersistentDict
 from repoze.bfg.security import Everyone, Allow, Deny, Authenticated
 from security import users
@@ -74,7 +76,7 @@ class BaseContainer(PersistentMapping):
                 >>> container = BaseContainer()
                 >>> container.update(foo='bar')
             
-        """
+        """ 
         if kwargs:
             for k,v in kwargs.items():
                 self.__setitem__(k,v)
@@ -82,7 +84,9 @@ class BaseContainer(PersistentMapping):
         elif isinstance(_data, dict):
             for k,v in _data.items():
                 self.__setitem__(k,v)
-    
+        elif isinstance(_data, list):
+            self.data.update(_data)
+            
     def to_dict(self):
         data = {}
         for interface in providedBy(self):
@@ -393,7 +397,7 @@ class Voucher(BaseContainer):
             errors['target'] = 'account does not exist'
         try:
             amount = int(amount)
-            if amount > self.amount:
+            if amount >= self.amount:
 	    	logging.error("Voucher::use Amount is too high")
                 errors['amount'] = 'amount is too high'
             elif amount < 0:
